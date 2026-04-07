@@ -3,6 +3,11 @@ from src.features.build_features import build_features
 from src.split.split import prepare_train_test, get_feature_cols
 from src.models.train_model import run_training
 from pathlib import Path
+import mlflow
+
+
+BASE_DIR = Path(__file__).resolve().parents[2]
+mlflow.set_tracking_uri(f"file:///{BASE_DIR / 'mlruns'}")
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 DATA_PATH = BASE_DIR / "data/raw/data.csv"
