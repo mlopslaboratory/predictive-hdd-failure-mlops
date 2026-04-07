@@ -8,20 +8,22 @@ def load_data(data_path: str, model_name: str) -> pd.DataFrame:
     Load CSV files, filter by Disk model
     """
 
-    files = sorted(glob.glob(str(Path(data_path) / "*.csv")))
+    path = Path(data_path)
 
-    dfs = []
-    for f in files:
-        df = pd.read_csv(f)
+    if path.is_file():
+        df = pd.read_csv(path)
 
-        # filter by a model
-        df = df[df["model"] == model_name]
+    else:
+        files = sorted(glob.glob(str(path / "*.csv")))
+        dfs = []
 
-        dfs.append(df)
+        for f in files:
+            tmp = pd.read_csv(f)
+            tmp = tmp[tmp["model"] == model_name]
+            dfs.append(tmp)
 
-    df = pd.concat(dfs, ignore_index=True)
+        df = pd.concat(dfs, ignore_index=True)
 
-    # make types
     df["date"] = pd.to_datetime(df["date"])
 
     return df
