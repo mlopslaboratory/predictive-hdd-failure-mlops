@@ -53,19 +53,31 @@ def configure_mlflow(config: dict) -> None:
 
 
 def main() -> None:
+    print("Запуск обучения Random Forest...")
     config = load_config()
     configure_mlflow(config)
 
+    print("Читаю train/test parquet из конфига...")
     train_df, test_df = load_training_data(config)
-    X_train, y_train, X_test, y_test = prepare_datasets(train_df, test_df, config)
+    print(f"Train shape: {train_df.shape}")
+    print(f"Test shape: {test_df.shape}")
 
-    run_training(
+    X_train, y_train, X_test, y_test = prepare_datasets(train_df, test_df, config)
+    print("Данные подготовлены. Начинаю обучение модели...")
+
+    _, metrics = run_training(
         X_train=X_train,
         y_train=y_train,
         X_test=X_test,
         y_test=y_test,
         config=config,
     )
+
+    print("Обучение завершено.")
+    print("Метрики на test:")
+    print(f"ROC-AUC: {metrics['roc_auc']:.4f}")
+    print(f"PR-AUC:  {metrics['pr_auc']:.4f}")
+    print(f"F1:      {metrics['f1']:.4f}")
 
 
 if __name__ == "__main__":

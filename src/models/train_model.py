@@ -8,6 +8,7 @@ from sklearn.metrics import average_precision_score, f1_score, roc_auc_score
 
 
 def train_model(X_train, y_train, model_params: dict):
+    print("Обучение Random Forest началось...")
     model = RandomForestClassifier(**model_params)
     model.fit(X_train, y_train)
     return model
@@ -32,6 +33,7 @@ def run_training(X_train, y_train, X_test, y_test, config: dict):
         model = train_model(X_train, y_train, model_params=model_params)
         metrics = evaluate_model(model, X_test, y_test)
 
+        print("Логирую параметры, метрики и модель в MLflow...")
         mlflow.log_param("model", model_name)
         mlflow.log_params(model_params)
         mlflow.log_metrics(metrics)
