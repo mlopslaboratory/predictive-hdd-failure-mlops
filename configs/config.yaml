@@ -6,7 +6,7 @@ training:
     - date
 
 mlflow:
-  tracking_uri: mlruns
+  tracking_uri: mlflow.db
   experiment_name: hdd_failure
 
 model:
