@@ -48,7 +48,13 @@ def prepare_datasets(
 
 def configure_mlflow(config: dict) -> None:
     tracking_uri = config["mlflow"]["tracking_uri"]
-    mlflow.set_tracking_uri(f"file:///{BASE_DIR / tracking_uri}")
+    tracking_path = BASE_DIR / tracking_uri
+
+    if tracking_path.suffix == ".db":
+        mlflow.set_tracking_uri(f"sqlite:///{tracking_path.as_posix()}")
+    else:
+        mlflow.set_tracking_uri(f"file:///{tracking_path.as_posix()}")
+
     mlflow.set_experiment(config["mlflow"]["experiment_name"])
 
 
@@ -56,6 +62,7 @@ def main() -> None:
     print("Запуск обучения Random Forest...")
     config = load_config()
     configure_mlflow(config)
+    output_dir = BASE_DIR / "artifacts"
 
     print("Читаю train/test parquet из конфига...")
     train_df, test_df = load_training_data(config)
@@ -71,9 +78,11 @@ def main() -> None:
         X_test=X_test,
         y_test=y_test,
         config=config,
+        output_dir=output_dir,
     )
 
     print("Обучение завершено.")
+    print(f"Артефакты сохранены в: {output_dir}")
     print("Метрики на test:")
     print(f"ROC-AUC: {metrics['roc_auc']:.4f}")
     print(f"PR-AUC:  {metrics['pr_auc']:.4f}")
