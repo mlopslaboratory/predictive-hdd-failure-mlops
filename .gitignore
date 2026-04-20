@@ -3,3 +3,8 @@ example_raw_data/
 .idea/
 .DS_Store
 /data/raw/data.csv
+mlflow.db
+mlruns/
+src/models/mlruns/
+__pycache__/
+*.py[cod]
