@@ -1,0 +1,50 @@
+seed: 42
+
+data:
+  raw_path: data/data.csv
+  processed_dir: data/processed
+  full_prepared_path: data/processed/data_prepared.csv
+  train_path: data/processed/train_data_prepared.csv
+  val_path: data/processed/val_data_prepared.csv
+  test_path: data/processed/test_data_prepared.csv
+
+preprocessing:
+  keep_healthy_fraction: 0.1
+  days_before_failure: 3
+  train_ratio: 0.7
+  val_ratio: 0.15
+  target_column: target
+  id_column: serial_number
+  failure_column: failure
+  date_column: date
+  smart_columns:
+    - smart_1_raw
+    - smart_2_raw
+    - smart_3_raw
+    - smart_5_raw
+    - smart_12_raw
+    - smart_22_raw
+    - smart_192_raw
+    - smart_194_raw
+    - smart_197_raw
+    - smart_198_raw
+    - smart_199_raw
+
+features:
+  use_delta_features: true
+  window_size: 7
+
+model:
+  name: RandomForest
+  artifact_path: models/rf_model.pkl
+  features_path: models/features.json
+  preprocessing_path: models/preprocessing.json
+  params:
+    n_estimators: 100
+    max_depth: 10
+    class_weight: balanced
+    random_state: 42
+    n_jobs: -1
+
+metrics:
+  output_path: metrics/metrics.json
