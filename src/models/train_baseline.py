@@ -192,7 +192,7 @@ def log_training_run(
 
         mlflow.sklearn.log_model(
             sk_model=model,
-            artifact_path=mlflow_params["model_artifact_name"],
+            name=mlflow_params["model_artifact_name"],
         )
         mlflow.log_artifact(BASE_DIR / model_params["features_path"])
         mlflow.log_artifact(BASE_DIR / model_params["preprocessing_path"])
