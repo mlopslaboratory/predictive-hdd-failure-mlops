@@ -48,3 +48,10 @@ model:
 
 metrics:
   output_path: metrics/metrics.json
+
+mlflow:
+  tracking_uri: mlflow.db
+  experiment_name: hdd_failure
+  registered_model_name: hdd_failure_random_forest
+  model_artifact_name: model
+  run_info_path: models/mlflow_run.json
