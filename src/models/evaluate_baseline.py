@@ -4,7 +4,6 @@ import json
 import pickle
 from pathlib import Path
 
-import mlflow
 import pandas as pd
 from sklearn.metrics import (
     average_precision_score,
@@ -83,6 +82,8 @@ def save_metrics(metrics: dict, metrics_path: Path) -> None:
 
 
 def log_metrics_and_register_model(metrics: dict, params: dict) -> None:
+    import mlflow
+
     mlflow_params = params["mlflow"]
     run_info = load_mlflow_run_info(BASE_DIR / mlflow_params["run_info_path"])
 
