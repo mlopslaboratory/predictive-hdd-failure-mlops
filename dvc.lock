@@ -66,13 +66,18 @@ stages:
       size: 1367483
     - path: src/models/train_baseline.py
       hash: md5
-      md5: d724b6d10bfbe27960c58b337c75a1ea
-      size: 4464
+      md5: 326936d8ef053a7cfb511eed68d71d47
+      size: 6681
     params:
       params.yaml:
         data.train_path: data/processed/train_data_prepared.csv
         features.use_delta_features: true
         features.window_size: 7
+        mlflow.experiment_name: hdd_failure
+        mlflow.model_artifact_name: model
+        mlflow.registered_model_name: hdd_failure_random_forest
+        mlflow.run_info_path: models/mlflow_run.json
+        mlflow.tracking_uri: mlflow.db
         model.artifact_path: models/rf_model.pkl
         model.features_path: models/features.json
         model.params:
@@ -102,6 +107,10 @@ stages:
       hash: md5
       md5: de3ac6186991790465eaf7e308ffbee0
       size: 2143
+    - path: models/mlflow_run.json
+      hash: md5
+      md5: ea75695abc06ba373779a4f59eecabba
+      size: 205
     - path: models/preprocessing.json
       hash: md5
       md5: e2c9db08c97d45310d6bde05d64e884e
@@ -117,6 +126,10 @@ stages:
       hash: md5
       md5: 55e75cca17a2cb219f0341a9bc4dc396
       size: 286637
+    - path: models/mlflow_run.json
+      hash: md5
+      md5: ea75695abc06ba373779a4f59eecabba
+      size: 205
     - path: models/preprocessing.json
       hash: md5
       md5: e2c9db08c97d45310d6bde05d64e884e
@@ -127,16 +140,19 @@ stages:
       size: 1231449
     - path: src/models/evaluate_baseline.py
       hash: md5
-      md5: f10f03f7335b6e9b433a74811040d14f
-      size: 2993
+      md5: eda78b3791bcfb485798f098b296e7b2
+      size: 3713
     - path: src/models/train_baseline.py
       hash: md5
-      md5: d724b6d10bfbe27960c58b337c75a1ea
-      size: 4464
+      md5: 326936d8ef053a7cfb511eed68d71d47
+      size: 6681
     params:
       params.yaml:
         data.test_path: data/processed/test_data_prepared.csv
         metrics.output_path: metrics/metrics.json
+        mlflow.registered_model_name: hdd_failure_random_forest
+        mlflow.run_info_path: models/mlflow_run.json
+        mlflow.tracking_uri: mlflow.db
         model.artifact_path: models/rf_model.pkl
         model.preprocessing_path: models/preprocessing.json
     outs:
