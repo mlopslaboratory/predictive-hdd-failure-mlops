@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 import yaml
 
-
 BASE_DIR = Path(__file__).resolve().parents[2]
 PARAMS_PATH = BASE_DIR / "params.yaml"
 

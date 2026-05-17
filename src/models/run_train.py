@@ -8,7 +8,6 @@ import yaml
 
 from src.models.train_model import run_training
 
-
 BASE_DIR = Path(__file__).resolve().parents[2]
 CONFIG_PATH = BASE_DIR / "configs" / "config.yaml"
 

@@ -2,10 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-
 
 BASE_COLUMNS = ["date", "serial_number", "model", "failure"]
 SMART_COLUMNS = [
@@ -99,10 +97,14 @@ def build_features(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
             mean_name = f"{column}_roll_mean_{window}"
             std_name = f"{column}_roll_std_{window}"
             featured[mean_name] = featured.groupby("serial_number")[column].transform(
-                lambda values: values.rolling(window, min_periods=1).mean()
+                lambda values, window=window: values.rolling(
+                    window, min_periods=1
+                ).mean()
             )
             featured[std_name] = featured.groupby("serial_number")[column].transform(
-                lambda values: values.rolling(window, min_periods=1).std()
+                lambda values, window=window: values.rolling(
+                    window, min_periods=1
+                ).std()
             )
             feature_cols.extend([mean_name, std_name])
 
@@ -110,7 +112,7 @@ def build_features(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
         for shift_days in [1, 3]:
             delta_name = f"{column}_delta_{shift_days}d"
             featured[delta_name] = featured.groupby("serial_number")[column].transform(
-                lambda values: values.diff(shift_days)
+                lambda values, shift_days=shift_days: values.diff(shift_days)
             )
             feature_cols.append(delta_name)
 

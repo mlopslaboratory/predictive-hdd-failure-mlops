@@ -7,6 +7,12 @@ addopts = "-ra"
 target-version = "py310"
 line-length = 88
 src = ["src", "tests"]
+extend-exclude = [
+    "notebooks",
+    "src/data/legacy_csv_data_loader.py",
+    "src/features/legacy_feature_pipeline.py",
+    "src/split/legacy_time_split.py",
+]
 
 [tool.ruff.lint]
 select = [
