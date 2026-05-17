@@ -44,10 +44,16 @@ stages:
       - model.features_path
       - model.preprocessing_path
       - model.params
+      - mlflow.tracking_uri
+      - mlflow.experiment_name
+      - mlflow.registered_model_name
+      - mlflow.model_artifact_name
+      - mlflow.run_info_path
     outs:
       - models/rf_model.pkl
       - models/features.json
       - models/preprocessing.json
+      - models/mlflow_run.json
 
   evaluate:
     cmd: python -m src.models.evaluate_baseline
@@ -55,6 +61,7 @@ stages:
       - data/processed/test_data_prepared.csv
       - models/rf_model.pkl
       - models/preprocessing.json
+      - models/mlflow_run.json
       - src/models/evaluate_baseline.py
       - src/models/train_baseline.py
     params:
@@ -62,6 +69,9 @@ stages:
       - model.artifact_path
       - model.preprocessing_path
       - metrics.output_path
+      - mlflow.tracking_uri
+      - mlflow.registered_model_name
+      - mlflow.run_info_path
     metrics:
       - metrics/metrics.json:
           cache: false
