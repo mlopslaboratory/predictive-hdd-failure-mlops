@@ -1,0 +1,77 @@
+stages:
+  prepare_data:
+    cmd: python -m src.data.make_dataset
+    deps:
+      - data/data.csv
+      - src/data/make_dataset.py
+    params:
+      - seed
+      - data.raw_path
+      - data.full_prepared_path
+      - data.train_path
+      - data.val_path
+      - data.test_path
+      - preprocessing.keep_healthy_fraction
+      - preprocessing.days_before_failure
+      - preprocessing.train_ratio
+      - preprocessing.val_ratio
+      - preprocessing.target_column
+      - preprocessing.id_column
+      - preprocessing.failure_column
+      - preprocessing.date_column
+      - preprocessing.smart_columns
+      - features.use_delta_features
+    outs:
+      - data/processed/data_prepared.csv
+      - data/processed/train_data_prepared.csv
+      - data/processed/val_data_prepared.csv
+      - data/processed/test_data_prepared.csv
+
+  train:
+    cmd: python -m src.models.train_baseline
+    deps:
+      - data/processed/train_data_prepared.csv
+      - src/models/train_baseline.py
+    params:
+      - seed
+      - data.train_path
+      - preprocessing.target_column
+      - preprocessing.id_column
+      - preprocessing.smart_columns
+      - features.use_delta_features
+      - features.window_size
+      - model.artifact_path
+      - model.features_path
+      - model.preprocessing_path
+      - model.params
+      - mlflow.tracking_uri
+      - mlflow.experiment_name
+      - mlflow.registered_model_name
+      - mlflow.model_artifact_name
+      - mlflow.run_info_path
+    outs:
+      - models/rf_model.pkl
+      - models/features.json
+      - models/preprocessing.json
+      - models/mlflow_run.json
+
+  evaluate:
+    cmd: python -m src.models.evaluate_baseline
+    deps:
+      - data/processed/test_data_prepared.csv
+      - models/rf_model.pkl
+      - models/preprocessing.json
+      - models/mlflow_run.json
+      - src/models/evaluate_baseline.py
+      - src/models/train_baseline.py
+    params:
+      - data.test_path
+      - model.artifact_path
+      - model.preprocessing_path
+      - metrics.output_path
+      - mlflow.tracking_uri
+      - mlflow.registered_model_name
+      - mlflow.run_info_path
+    metrics:
+      - metrics/metrics.json:
+          cache: false
