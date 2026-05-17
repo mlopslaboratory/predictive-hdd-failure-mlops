@@ -4,6 +4,7 @@ import json
 import pickle
 from pathlib import Path
 
+import mlflow
 import pandas as pd
 from sklearn.metrics import (
     average_precision_score,
@@ -13,7 +14,13 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
-from src.models.train_baseline import BASE_DIR, create_windows, load_params, normalize
+from src.models.train_baseline import (
+    BASE_DIR,
+    configure_mlflow,
+    create_windows,
+    load_params,
+    normalize,
+)
 
 
 def load_model(model_path: Path):
@@ -23,6 +30,10 @@ def load_model(model_path: Path):
 
 def load_preprocessing(preprocessing_path: Path) -> dict:
     return json.loads(preprocessing_path.read_text(encoding="utf-8"))
+
+
+def load_mlflow_run_info(run_info_path: Path) -> dict:
+    return json.loads(run_info_path.read_text(encoding="utf-8"))
 
 
 def prepare_split(
@@ -71,6 +82,21 @@ def save_metrics(metrics: dict, metrics_path: Path) -> None:
     )
 
 
+def log_metrics_and_register_model(metrics: dict, params: dict) -> None:
+    mlflow_params = params["mlflow"]
+    run_info = load_mlflow_run_info(BASE_DIR / mlflow_params["run_info_path"])
+
+    configure_mlflow(params)
+
+    with mlflow.start_run(run_id=run_info["run_id"]):
+        mlflow.log_metrics({f"test_{key}": value for key, value in metrics.items()})
+
+    mlflow.register_model(
+        model_uri=run_info["model_uri"],
+        name=mlflow_params["registered_model_name"],
+    )
+
+
 def main() -> None:
     params = load_params()
     model_params = params["model"]
@@ -85,6 +111,7 @@ def main() -> None:
     threshold = metrics_params.get("prediction_threshold", 0.5)
     metrics = evaluate_model(model, X_test, y_test, threshold=threshold)
     save_metrics(metrics, BASE_DIR / metrics_params["output_path"])
+    log_metrics_and_register_model(metrics, params)
 
     print("Evaluation metrics saved:")
     print(metrics_params["output_path"])
