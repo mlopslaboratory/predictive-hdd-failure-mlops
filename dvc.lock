@@ -66,8 +66,8 @@ stages:
       size: 1367483
     - path: src/models/train_baseline.py
       hash: md5
-      md5: 326936d8ef053a7cfb511eed68d71d47
-      size: 6681
+      md5: 8a5afa0523a89b57e4292aa13df7f9d3
+      size: 6672
     params:
       params.yaml:
         data.train_path: data/processed/train_data_prepared.csv
@@ -109,7 +109,7 @@ stages:
       size: 2143
     - path: models/mlflow_run.json
       hash: md5
-      md5: ea75695abc06ba373779a4f59eecabba
+      md5: 520c836ca07d7cc82bf6d84a642769dd
       size: 205
     - path: models/preprocessing.json
       hash: md5
@@ -128,7 +128,7 @@ stages:
       size: 286637
     - path: models/mlflow_run.json
       hash: md5
-      md5: ea75695abc06ba373779a4f59eecabba
+      md5: 520c836ca07d7cc82bf6d84a642769dd
       size: 205
     - path: models/preprocessing.json
       hash: md5
@@ -144,8 +144,8 @@ stages:
       size: 3713
     - path: src/models/train_baseline.py
       hash: md5
-      md5: 326936d8ef053a7cfb511eed68d71d47
-      size: 6681
+      md5: 8a5afa0523a89b57e4292aa13df7f9d3
+      size: 6672
     params:
       params.yaml:
         data.test_path: data/processed/test_data_prepared.csv
