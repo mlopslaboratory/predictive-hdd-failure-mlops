@@ -4,8 +4,6 @@ import json
 import pickle
 from pathlib import Path
 
-import mlflow
-import mlflow.sklearn
 import pandas as pd
 import yaml
 from sklearn.ensemble import RandomForestClassifier
@@ -118,6 +116,8 @@ def train_baseline(params: dict) -> tuple[RandomForestClassifier, dict]:
 
 
 def configure_mlflow(params: dict) -> None:
+    import mlflow
+
     mlflow_params = params["mlflow"]
     tracking_uri = mlflow_params["tracking_uri"]
     tracking_path = BASE_DIR / tracking_uri
@@ -178,6 +178,9 @@ def log_training_run(
     preprocessing: dict,
     params: dict,
 ) -> str:
+    import mlflow
+    import mlflow.sklearn
+
     mlflow_params = params["mlflow"]
     model_params = params["model"]
 
