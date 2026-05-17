@@ -1,0 +1,146 @@
+schema: '2.0'
+stages:
+  prepare_data:
+    cmd: python -m src.data.make_dataset
+    deps:
+    - path: data/data.csv
+      hash: md5
+      md5: 8bebdd2b5f17ac8b0a1cd2d2639b4d71
+      size: 8004623
+    - path: src/data/make_dataset.py
+      hash: md5
+      md5: b7ace664ec5c4cd498e2fc8bbbdce6bc
+      size: 5689
+    params:
+      params.yaml:
+        data.full_prepared_path: data/processed/data_prepared.csv
+        data.raw_path: data/data.csv
+        data.test_path: data/processed/test_data_prepared.csv
+        data.train_path: data/processed/train_data_prepared.csv
+        data.val_path: data/processed/val_data_prepared.csv
+        features.use_delta_features: true
+        preprocessing.date_column: date
+        preprocessing.days_before_failure: 3
+        preprocessing.failure_column: failure
+        preprocessing.id_column: serial_number
+        preprocessing.keep_healthy_fraction: 0.1
+        preprocessing.smart_columns:
+        - smart_1_raw
+        - smart_2_raw
+        - smart_3_raw
+        - smart_5_raw
+        - smart_12_raw
+        - smart_22_raw
+        - smart_192_raw
+        - smart_194_raw
+        - smart_197_raw
+        - smart_198_raw
+        - smart_199_raw
+        preprocessing.target_column: target
+        preprocessing.train_ratio: 0.7
+        preprocessing.val_ratio: 0.15
+        seed: 42
+    outs:
+    - path: data/processed/data_prepared.csv
+      hash: md5
+      md5: 1bc0c926175cd9aa66471a2003a439e8
+      size: 1905796
+    - path: data/processed/test_data_prepared.csv
+      hash: md5
+      md5: 55e75cca17a2cb219f0341a9bc4dc396
+      size: 286637
+    - path: data/processed/train_data_prepared.csv
+      hash: md5
+      md5: 1331e215a98152a4bb92db7cb3f2c8c2
+      size: 1367483
+    - path: data/processed/val_data_prepared.csv
+      hash: md5
+      md5: 539cd2d74e6f6c455a85696806a72c1e
+      size: 252452
+  train:
+    cmd: python -m src.models.train_baseline
+    deps:
+    - path: data/processed/train_data_prepared.csv
+      hash: md5
+      md5: 1331e215a98152a4bb92db7cb3f2c8c2
+      size: 1367483
+    - path: src/models/train_baseline.py
+      hash: md5
+      md5: d724b6d10bfbe27960c58b337c75a1ea
+      size: 4464
+    params:
+      params.yaml:
+        data.train_path: data/processed/train_data_prepared.csv
+        features.use_delta_features: true
+        features.window_size: 7
+        model.artifact_path: models/rf_model.pkl
+        model.features_path: models/features.json
+        model.params:
+          n_estimators: 100
+          max_depth: 10
+          class_weight: balanced
+          random_state: 42
+          n_jobs: -1
+        model.preprocessing_path: models/preprocessing.json
+        preprocessing.id_column: serial_number
+        preprocessing.smart_columns:
+        - smart_1_raw
+        - smart_2_raw
+        - smart_3_raw
+        - smart_5_raw
+        - smart_12_raw
+        - smart_22_raw
+        - smart_192_raw
+        - smart_194_raw
+        - smart_197_raw
+        - smart_198_raw
+        - smart_199_raw
+        preprocessing.target_column: target
+        seed: 42
+    outs:
+    - path: models/features.json
+      hash: md5
+      md5: de3ac6186991790465eaf7e308ffbee0
+      size: 2143
+    - path: models/preprocessing.json
+      hash: md5
+      md5: e2c9db08c97d45310d6bde05d64e884e
+      size: 3816
+    - path: models/rf_model.pkl
+      hash: md5
+      md5: d9dd5fbd159d00b2af1fbcaecb291f31
+      size: 1231449
+  evaluate:
+    cmd: python -m src.models.evaluate_baseline
+    deps:
+    - path: data/processed/test_data_prepared.csv
+      hash: md5
+      md5: 55e75cca17a2cb219f0341a9bc4dc396
+      size: 286637
+    - path: models/preprocessing.json
+      hash: md5
+      md5: e2c9db08c97d45310d6bde05d64e884e
+      size: 3816
+    - path: models/rf_model.pkl
+      hash: md5
+      md5: d9dd5fbd159d00b2af1fbcaecb291f31
+      size: 1231449
+    - path: src/models/evaluate_baseline.py
+      hash: md5
+      md5: f10f03f7335b6e9b433a74811040d14f
+      size: 2993
+    - path: src/models/train_baseline.py
+      hash: md5
+      md5: d724b6d10bfbe27960c58b337c75a1ea
+      size: 4464
+    params:
+      params.yaml:
+        data.test_path: data/processed/test_data_prepared.csv
+        metrics.output_path: metrics/metrics.json
+        model.artifact_path: models/rf_model.pkl
+        model.preprocessing_path: models/preprocessing.json
+    outs:
+    - path: metrics/metrics.json
+      hash: md5
+      md5: 6c6b6b33b07d44b03c96bcc41aae0318
+      size: 254
