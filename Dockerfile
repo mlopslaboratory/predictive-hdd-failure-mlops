@@ -21,7 +21,6 @@ COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 COPY src/ ./src/
-COPY artifacts/ ./artifacts/
 
 RUN chown -R appuser:appuser /app
 
