@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 import logging
 import pickle
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
@@ -18,17 +20,6 @@ MODELS_DIR = BASE_DIR / "models"
 MODEL_PATH = MODELS_DIR / "rf_model.pkl"
 FEATURES_PATH = MODELS_DIR / "features.json"
 PREPROCESSING_PATH = MODELS_DIR / "preprocessing.json"
-
-app = FastAPI(
-    title="Predictive HDD Failure API",
-    description="Inference сервис для предсказания отказа диска.",
-    version="1.0.0",
-    openapi_tags=[
-        {"name": "health", "description": "Service health checks."},
-        {"name": "model", "description": "Loaded model metadata."},
-        {"name": "inference", "description": "HDD failure inference."},
-    ],
-)
 
 model = None
 feature_cols: list[str] = []
@@ -69,13 +60,27 @@ def load_artifacts(
     return loaded_model, loaded_features, loaded_preprocessing
 
 
-@app.on_event("startup")
-def startup_event() -> None:
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     global model, feature_cols, preprocessing_metadata
 
     logger.info("Loading model artifacts...")
     model, feature_cols, preprocessing_metadata = load_artifacts()
     logger.info("Artifacts loaded. Features count: %s", len(feature_cols))
+    yield
+
+
+app = FastAPI(
+    title="Predictive HDD Failure API",
+    description="Inference сервис для предсказания отказа диска.",
+    version="1.0.0",
+    lifespan=lifespan,
+    openapi_tags=[
+        {"name": "health", "description": "Service health checks."},
+        {"name": "model", "description": "Loaded model metadata."},
+        {"name": "inference", "description": "HDD failure inference."},
+    ],
+)
 
 
 @app.get("/health", tags=["health"], summary="Check service health")
