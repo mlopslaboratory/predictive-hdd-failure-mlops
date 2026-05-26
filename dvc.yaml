@@ -69,9 +69,38 @@ stages:
       - model.artifact_path
       - model.preprocessing_path
       - metrics.output_path
+      - metrics.prediction_threshold
       - mlflow.tracking_uri
       - mlflow.registered_model_name
       - mlflow.run_info_path
     metrics:
       - metrics/metrics.json:
+          cache: false
+
+  drift:
+    cmd: python -m src.monitoring.calculate_drift
+    deps:
+      - data/processed/train_data_prepared.csv
+      - data/processed/val_data_prepared.csv
+      - data/processed/test_data_prepared.csv
+      - models/rf_model.pkl
+      - models/preprocessing.json
+      - src/models/evaluate_baseline.py
+      - src/models/train_baseline.py
+      - src/monitoring/calculate_drift.py
+    params:
+      - data.train_path
+      - data.val_path
+      - data.test_path
+      - model.artifact_path
+      - model.preprocessing_path
+      - metrics.drift_output_path
+      - metrics.prediction_threshold
+      - drift.psi_bins
+      - drift.data_drift_threshold
+      - drift.target_drift_threshold
+      - drift.concept_drift_threshold
+      - drift.primary_concept_metric
+    metrics:
+      - metrics/drift_metrics.json:
           cache: false
