@@ -12,8 +12,10 @@ from src.models.evaluate_baseline import (
     load_preprocessing,
     prepare_split,
 )
-from src.models.train_baseline import BASE_DIR, load_params
-
+from src.models.train_baseline import (
+    BASE_DIR,
+    load_params,
+)
 
 DEFAULT_PSI_BINS = 10
 DEFAULT_DATA_DRIFT_THRESHOLD = 0.2

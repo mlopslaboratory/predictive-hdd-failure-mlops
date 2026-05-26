@@ -9,8 +9,8 @@ stages:
       size: 8004623
     - path: src/data/make_dataset.py
       hash: md5
-      md5: b7ace664ec5c4cd498e2fc8bbbdce6bc
-      size: 5689
+      md5: 62863030eba448547eb477ad44ccfae1
+      size: 5688
     params:
       params.yaml:
         data.full_prepared_path: data/processed/data_prepared.csv
@@ -66,8 +66,8 @@ stages:
       size: 1367483
     - path: src/models/train_baseline.py
       hash: md5
-      md5: 8a5afa0523a89b57e4292aa13df7f9d3
-      size: 6672
+      md5: 2d23401f9afb6631fee6f5d690b73a29
+      size: 6699
     params:
       params.yaml:
         data.train_path: data/processed/train_data_prepared.csv
@@ -109,7 +109,7 @@ stages:
       size: 2143
     - path: models/mlflow_run.json
       hash: md5
-      md5: 520c836ca07d7cc82bf6d84a642769dd
+      md5: 66fa87295413f23d75b918325d1a9eb3
       size: 205
     - path: models/preprocessing.json
       hash: md5
@@ -117,7 +117,7 @@ stages:
       size: 3816
     - path: models/rf_model.pkl
       hash: md5
-      md5: d9dd5fbd159d00b2af1fbcaecb291f31
+      md5: 3b174f9f61a581a542f820500d2777ba
       size: 1231449
   evaluate:
     cmd: python -m src.models.evaluate_baseline
@@ -128,7 +128,7 @@ stages:
       size: 286637
     - path: models/mlflow_run.json
       hash: md5
-      md5: 520c836ca07d7cc82bf6d84a642769dd
+      md5: 66fa87295413f23d75b918325d1a9eb3
       size: 205
     - path: models/preprocessing.json
       hash: md5
@@ -136,20 +136,21 @@ stages:
       size: 3816
     - path: models/rf_model.pkl
       hash: md5
-      md5: d9dd5fbd159d00b2af1fbcaecb291f31
+      md5: 3b174f9f61a581a542f820500d2777ba
       size: 1231449
     - path: src/models/evaluate_baseline.py
       hash: md5
-      md5: eda78b3791bcfb485798f098b296e7b2
-      size: 3713
+      md5: adeed924f5522cbe1203c4e414456ef9
+      size: 3718
     - path: src/models/train_baseline.py
       hash: md5
-      md5: 8a5afa0523a89b57e4292aa13df7f9d3
-      size: 6672
+      md5: 2d23401f9afb6631fee6f5d690b73a29
+      size: 6699
     params:
       params.yaml:
         data.test_path: data/processed/test_data_prepared.csv
         metrics.output_path: metrics/metrics.json
+        metrics.prediction_threshold: 0.5
         mlflow.registered_model_name: hdd_failure_random_forest
         mlflow.run_info_path: models/mlflow_run.json
         mlflow.tracking_uri: mlflow.db
@@ -160,3 +161,57 @@ stages:
       hash: md5
       md5: 6c6b6b33b07d44b03c96bcc41aae0318
       size: 254
+  drift:
+    cmd: python -m src.monitoring.calculate_drift
+    deps:
+    - path: data/processed/test_data_prepared.csv
+      hash: md5
+      md5: 55e75cca17a2cb219f0341a9bc4dc396
+      size: 286637
+    - path: data/processed/train_data_prepared.csv
+      hash: md5
+      md5: 1331e215a98152a4bb92db7cb3f2c8c2
+      size: 1367483
+    - path: data/processed/val_data_prepared.csv
+      hash: md5
+      md5: 539cd2d74e6f6c455a85696806a72c1e
+      size: 252452
+    - path: models/preprocessing.json
+      hash: md5
+      md5: e2c9db08c97d45310d6bde05d64e884e
+      size: 3816
+    - path: models/rf_model.pkl
+      hash: md5
+      md5: 3b174f9f61a581a542f820500d2777ba
+      size: 1231449
+    - path: src/models/evaluate_baseline.py
+      hash: md5
+      md5: adeed924f5522cbe1203c4e414456ef9
+      size: 3718
+    - path: src/models/train_baseline.py
+      hash: md5
+      md5: 2d23401f9afb6631fee6f5d690b73a29
+      size: 6699
+    - path: src/monitoring/calculate_drift.py
+      hash: md5
+      md5: 66d760c29c608943f3147161be03b27e
+      size: 9501
+    params:
+      params.yaml:
+        data.test_path: data/processed/test_data_prepared.csv
+        data.train_path: data/processed/train_data_prepared.csv
+        data.val_path: data/processed/val_data_prepared.csv
+        drift.concept_drift_threshold: 0.05
+        drift.data_drift_threshold: 0.2
+        drift.primary_concept_metric: pr_auc
+        drift.psi_bins: 10
+        drift.target_drift_threshold: 0.1
+        metrics.drift_output_path: metrics/drift_metrics.json
+        metrics.prediction_threshold: 0.5
+        model.artifact_path: models/rf_model.pkl
+        model.preprocessing_path: models/preprocessing.json
+    outs:
+    - path: metrics/drift_metrics.json
+      hash: md5
+      md5: d198ee4d01e8aa880f2a26270ca10678
+      size: 10804
