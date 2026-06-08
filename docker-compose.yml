@@ -14,3 +14,28 @@ services:
       - ./mlruns:/app/mlruns
       # If a local logs folder is used, uncomment the next line:
       # - ./logs:/app/logs
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    container_name: predictive-hdd-failure-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - app
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    container_name: predictive-hdd-failure-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
