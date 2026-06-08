@@ -21,6 +21,7 @@ COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 COPY src/ ./src/
+COPY models/ ./models/
 
 RUN chown -R appuser:appuser /app
 

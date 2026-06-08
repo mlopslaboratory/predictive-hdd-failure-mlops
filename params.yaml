@@ -48,6 +48,15 @@ model:
 
 metrics:
   output_path: metrics/metrics.json
+  drift_output_path: metrics/drift_metrics.json
+  prediction_threshold: 0.5
+
+drift:
+  psi_bins: 10
+  data_drift_threshold: 0.2
+  target_drift_threshold: 0.1
+  concept_drift_threshold: 0.05
+  primary_concept_metric: pr_auc
 
 mlflow:
   tracking_uri: mlflow.db
