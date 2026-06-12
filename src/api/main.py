@@ -8,7 +8,7 @@ import time
 from collections import deque
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from html import escape
 from pathlib import Path
 from typing import Any
@@ -931,7 +931,7 @@ def predict(request: PredictionRequest) -> PredictionResponse:
         )
         prediction_history.append(
             {
-                "created_at": datetime.now(UTC).isoformat(),
+                "created_at": datetime.now(timezone.utc).isoformat(),
                 "failure_probability": probability,
                 "prediction": prediction,
                 "anomaly": anomaly,
