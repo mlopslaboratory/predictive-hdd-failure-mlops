@@ -10,7 +10,7 @@ MLOps-проект для прогнозирования отказов жест
 
 1. Подготовка датасета и train/val/test split по `serial_number`.
 2. Создание delta-признаков по SMART-метрикам.
-3. Обучение baseline-модели `RandomForestClassifier`.
+3. Обучение модели `RandomForestClassifier`.
 4. Оценка качества на test split.
 5. Расчет `data_drift`, `target_drift` и `concept_drift`.
 6. Публикация FastAPI inference service с Prometheus/Grafana мониторингом.
@@ -28,7 +28,7 @@ notebooks/               # EDA и эксперименты
 reports/                 # Markdown-отчеты о drift monitoring
 legacy/                  # старые training/data/split модули, не часть production path
 src/api/                 # FastAPI inference service
-src/data/                # подготовка датасета и notebook-support builders
+src/data/                # подготовка датасета
 src/models/              # обучение и оценка baseline-модели
 src/monitoring/          # расчет drift-метрик
 tests/                   # unit-тесты
@@ -58,6 +58,7 @@ dvc pull
 ```text
 data/data.csv
 ```
+[data.csv](https://drive.google.com/file/d/11-ljkaS62_DQqF-BNVvygIRSjMXMg6V4/view?usp=sharing)
 
 После подготовки данных пайплайн создает:
 
