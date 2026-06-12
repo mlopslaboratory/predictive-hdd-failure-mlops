@@ -1,0 +1,5 @@
+[core]
+    remote = hdd-mlops
+['remote "hdd-mlops"']
+    url = s3://predictive-hdd-failure-mlops
+    endpointurl = https://storage.yandexcloud.net
