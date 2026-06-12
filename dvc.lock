@@ -9,8 +9,8 @@ stages:
       size: 8004623
     - path: src/data/make_dataset.py
       hash: md5
-      md5: 62863030eba448547eb477ad44ccfae1
-      size: 5688
+      md5: 2e3a1fb8ef330c005bc09b99459ed6e4
+      size: 5893
     params:
       params.yaml:
         data.full_prepared_path: data/processed/data_prepared.csv
@@ -215,3 +215,28 @@ stages:
       hash: md5
       md5: d198ee4d01e8aa880f2a26270ca10678
       size: 10804
+  drift_report:
+    cmd: python -m src.monitoring.generate_drift_report
+    deps:
+    - path: metrics/drift_metrics.json
+      hash: md5
+      md5: d198ee4d01e8aa880f2a26270ca10678
+      size: 10804
+    - path: metrics/metrics.json
+      hash: md5
+      md5: 6c6b6b33b07d44b03c96bcc41aae0318
+      size: 254
+    - path: src/monitoring/generate_drift_report.py
+      hash: md5
+      md5: b86a96871c926905599ec765e0445711
+      size: 4033
+    params:
+      params.yaml:
+        metrics.drift_output_path: metrics/drift_metrics.json
+        metrics.drift_report_path: reports/drift_report.md
+        metrics.output_path: metrics/metrics.json
+    outs:
+    - path: reports/drift_report.md
+      hash: md5
+      md5: a3b38c33d57567f4fbbab2f1e824d609
+      size: 1324

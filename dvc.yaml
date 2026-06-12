@@ -104,3 +104,17 @@ stages:
     metrics:
       - metrics/drift_metrics.json:
           cache: false
+
+  drift_report:
+    cmd: python -m src.monitoring.generate_drift_report
+    deps:
+      - metrics/metrics.json
+      - metrics/drift_metrics.json
+      - src/monitoring/generate_drift_report.py
+    params:
+      - metrics.output_path
+      - metrics.drift_output_path
+      - metrics.drift_report_path
+    outs:
+      - reports/drift_report.md:
+          cache: false

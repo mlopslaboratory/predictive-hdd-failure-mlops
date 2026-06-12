@@ -6,10 +6,10 @@ import mlflow
 import pandas as pd
 import yaml
 
-from src.models.train_model import run_training
+from legacy.models.train_model import run_training
 
 BASE_DIR = Path(__file__).resolve().parents[2]
-CONFIG_PATH = BASE_DIR / "configs" / "config.yaml"
+CONFIG_PATH = BASE_DIR / "legacy" / "configs" / "config.yaml"
 
 
 def load_config(config_path: Path = CONFIG_PATH) -> dict:
@@ -58,12 +58,12 @@ def configure_mlflow(config: dict) -> None:
 
 
 def main() -> None:
-    print("Запуск обучения Random Forest...")
+    print("Запуск legacy обучения Random Forest...")
     config = load_config()
     configure_mlflow(config)
     output_dir = BASE_DIR / "artifacts"
 
-    print("Читаю train/test parquet из конфига...")
+    print("Читаю train/test parquet из legacy-конфига...")
     train_df, test_df = load_training_data(config)
     print(f"Train shape: {train_df.shape}")
     print(f"Test shape: {test_df.shape}")
@@ -80,7 +80,7 @@ def main() -> None:
         output_dir=output_dir,
     )
 
-    print("Обучение завершено.")
+    print("Legacy обучение завершено.")
     print(f"Артефакты сохранены в: {output_dir}")
     print("Метрики на test:")
     print(f"ROC-AUC: {metrics['roc_auc']:.4f}")

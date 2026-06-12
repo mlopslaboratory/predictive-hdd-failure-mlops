@@ -13,18 +13,22 @@ MLOps-проект для прогнозирования отказов жест
 3. Обучение baseline-модели `RandomForestClassifier`.
 4. Оценка качества на test split.
 5. Расчет `data_drift`, `target_drift` и `concept_drift`.
+6. Публикация FastAPI inference service с Prometheus/Grafana мониторингом.
+7. Обновление Kubernetes deployment через GitOps repository и Argo CD.
+
 
 ## Структура проекта
 
 ```text
-configs/                 # старый конфиг для legacy training path
 data/                    # raw и processed данные, часть файлов ведется через DVC
 docs/                    # дополнительная документация
 metrics/                 # JSON-метрики качества и drift
 models/                  # обученная модель и metadata preprocessing
 notebooks/               # EDA и эксперименты
+reports/                 # Markdown-отчеты о drift monitoring
+legacy/                  # старые training/data/split модули, не часть production path
 src/api/                 # FastAPI inference service
-src/data/                # подготовка датасета
+src/data/                # подготовка датасета и notebook-support builders
 src/models/              # обучение и оценка baseline-модели
 src/monitoring/          # расчет drift-метрик
 tests/                   # unit-тесты
@@ -88,6 +92,7 @@ DVC выполнит stages из `dvc.yaml`:
 2. `train`: обучит baseline-модель и сохранит артефакты.
 3. `evaluate`: посчитает test-метрики.
 4. `drift`: посчитает data/target/concept drift.
+5. `drift_report`: создаст Markdown-отчет о drift monitoring.
 
 Проверить состояние пайплайна:
 
@@ -110,6 +115,7 @@ python -m src.data.make_dataset
 python -m src.models.train_baseline
 python -m src.models.evaluate_baseline
 python -m src.monitoring.calculate_drift
+python -m src.monitoring.generate_drift_report
 ```
 
 
@@ -146,10 +152,17 @@ python -m src.models.evaluate_baseline
 metrics/drift_metrics.json
 ```
 
+Markdown-отчет о дрейфе сохраняется в:
+
+```text
+reports/drift_report.md
+```
+
 Запустить только drift monitoring:
 
 ```bash
 python -m src.monitoring.calculate_drift
+python -m src.monitoring.generate_drift_report
 ```
 
 Что считается:
@@ -210,10 +223,51 @@ http://localhost:8000/docs
 curl http://localhost:8000/model-info
 ```
 
+Веб UI:
+
+```text
+http://localhost:8000/
+```
+
+В интерфейсе есть:
+
+- страница инференса;
+- таблица последних предсказаний текущего процесса API;
+- флаги `data_drift`, `target_drift`, `concept_drift`;
+- флаг аномалии для предсказания;
+- кнопка запроса переобучения;
+- страница экспериментов `/experiments` с MLflow run info, test metrics и drift summary.
+
+Полезные API endpoints:
+
+```bash
+curl http://localhost:8000/predictions
+curl http://localhost:8000/drift-status
+curl -X POST http://localhost:8000/retrain
+```
+
 Docker Compose запуск:
 
 ```bash
 docker compose up --build
+```
+
+Prometheus:
+
+```text
+http://localhost:9090
+```
+
+Grafana:
+
+```text
+http://localhost:3000
+```
+
+Логин/пароль Grafana для локального compose:
+
+```text
+admin / admin
 ```
 
 Остановить:
@@ -223,6 +277,51 @@ docker compose down
 ```
 
 Подробнее: `docs/DOCKER_COMPOSE.md`.
+
+## CI/CD и Argo CD
+
+GitHub Actions workflow выполняет:
+
+1. `ruff`;
+2. `pytest`;
+3. Docker build smoke test;
+4. при `push` в `main`: `dvc pull` модельных артефактов, build/push image в GHCR,
+   обновление image tag в GitOps repository.
+
+Container image:
+
+```text
+ghcr.io/mlopslaboratory/predictive-hdd-failure-api:<git-sha>
+```
+
+Для deploy job нужны GitHub Secrets в основном репозитории:
+
+```text
+YC_STORAGE_ACCESS_KEY_ID
+YC_STORAGE_SECRET_ACCESS_KEY
+GITOPS_REPO_TOKEN
+```
+
+`GITOPS_REPO_TOKEN` должен иметь `Contents: Read and write` для:
+
+```text
+mlopslaboratory/predictive-hdd-failure-gitops
+```
+
+Argo CD следит за отдельным GitOps repository:
+
+```text
+https://github.com/mlopslaboratory/predictive-hdd-failure-gitops
+```
+
+Проверка в Minikube:
+
+```bash
+argocd app get predictive-hdd-failure
+kubectl get all -n predictive-hdd
+minikube service predictive-hdd-api -n predictive-hdd
+```
+
 
 ## Проверки качества кода
 
@@ -244,10 +343,10 @@ python -m ruff check src tests
 dvc status
 ```
 
-Последняя проверка в окружении `mlops`:
+Ожидаемый результат в корректном окружении Python 3.10 с установленными зависимостями:
 
 ```text
-pytest: 17 passed
+pytest: passed
 ruff: All checks passed
 dvc status: Data and pipelines are up to date
 ```

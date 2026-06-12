@@ -1,3 +1,8 @@
+[project]
+name = "predictive-hdd-failure-mlops"
+version = "0.1.0"
+requires-python = ">=3.10,<3.11"
+
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
@@ -8,10 +13,8 @@ target-version = "py310"
 line-length = 88
 src = ["src", "tests"]
 extend-exclude = [
+    "legacy",
     "notebooks",
-    "src/data/legacy_csv_data_loader.py",
-    "src/features/legacy_feature_pipeline.py",
-    "src/split/legacy_time_split.py",
 ]
 
 [tool.ruff.lint]

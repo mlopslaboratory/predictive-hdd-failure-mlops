@@ -49,6 +49,7 @@ model:
 metrics:
   output_path: metrics/metrics.json
   drift_output_path: metrics/drift_metrics.json
+  drift_report_path: reports/drift_report.md
   prediction_threshold: 0.5
 
 drift:

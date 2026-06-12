@@ -51,6 +51,7 @@ def test_predict_uses_saved_feature_order(monkeypatch):
     model = DummyModel()
     monkeypatch.setattr(api_main, "model", model)
     monkeypatch.setattr(api_main, "feature_cols", ["feature_b_t", "feature_a_t"])
+    api_main.prediction_history.clear()
 
     response = api_main.predict(
         api_main.PredictionRequest(
@@ -63,8 +64,11 @@ def test_predict_uses_saved_feature_order(monkeypatch):
 
     assert response.failure_probability == 0.75
     assert response.prediction == 1
+    assert response.anomaly is True
     assert model.columns == ["feature_b_t", "feature_a_t"]
     assert model.values == [2.0, 1.0]
+    assert len(api_main.recent_predictions()) == 1
+    assert api_main.recent_predictions()[0].feature_count == 2
 
 
 def test_model_info_includes_preprocessing_metadata(monkeypatch):
@@ -96,3 +100,53 @@ def test_openapi_schema_exposes_inference_endpoint():
 
     assert "/predict" in schema["paths"]
     assert schema["paths"]["/predict"]["post"]["tags"] == ["inference"]
+    assert "/predictions" in schema["paths"]
+    assert "/drift-status" in schema["paths"]
+    assert "/retrain" in schema["paths"]
+
+
+def test_build_drift_status_summarizes_flags(tmp_path):
+    drift_path = tmp_path / "drift_metrics.json"
+    drift_path.write_text(
+        json.dumps(
+            {
+                "reference_split": "train",
+                "current_split": "test",
+                "window_counts": {"train": 10, "test": 4},
+                "data_drift": {
+                    "drift_detected": True,
+                    "drifted_feature_count": 2,
+                    "max_psi": 0.42,
+                    "top_drifted_features": ["feature_a", "feature_b"],
+                },
+                "target_drift": {
+                    "drift_detected": False,
+                    "current_positive_rate": 0.25,
+                },
+                "concept_drift": {
+                    "drift_detected": False,
+                    "primary_metric": "pr_auc",
+                    "primary_metric_drop": 0.01,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    status = api_main.build_drift_status(drift_path)
+
+    assert status.available is True
+    assert status.data_drift is True
+    assert status.target_drift is False
+    assert status.concept_drift is False
+    assert status.any_drift is True
+    assert status.summary["drifted_feature_count"] == 2
+
+
+def test_retrain_returns_manual_command(monkeypatch):
+    monkeypatch.setattr(api_main, "RETRAIN_COMMAND", "dvc repro")
+
+    response = api_main.retrain()
+
+    assert response.status == "manual_action_required"
+    assert response.command == "dvc repro"

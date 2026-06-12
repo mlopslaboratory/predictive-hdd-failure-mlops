@@ -1,8 +1,9 @@
 """Legacy loader from the first CSV-based training pipeline."""
 
-import pandas as pd
 import glob
 from pathlib import Path
+
+import pandas as pd
 
 
 def load_data(data_path: str, model_name: str) -> pd.DataFrame:
