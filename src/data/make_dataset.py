@@ -73,9 +73,12 @@ def mark_risk_zone(
 
     for _, group in prepared.groupby(id_column):
         if group[failure_column].any():
-            last_failure_idx = group.index[group[failure_column] == 1][-1]
-            start_idx = max(0, last_failure_idx - days_before_failure)
-            prepared.loc[start_idx:last_failure_idx, target_column] = 1
+            group_indexes = group.index.to_list()
+            failure_positions = np.flatnonzero(group[failure_column].to_numpy() == 1)
+            last_failure_position = int(failure_positions[-1])
+            start_position = max(0, last_failure_position - days_before_failure)
+            risk_indexes = group_indexes[start_position : last_failure_position + 1]
+            prepared.loc[risk_indexes, target_column] = 1
 
     return prepared
 

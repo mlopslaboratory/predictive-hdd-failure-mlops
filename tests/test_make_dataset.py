@@ -44,6 +44,27 @@ def test_mark_risk_zone_marks_rows_before_failure():
     assert result["target"].tolist() == [0, 0, 1, 1, 1]
 
 
+def test_mark_risk_zone_does_not_mark_other_serials_with_sparse_indexes():
+    df = pd.DataFrame(
+        {
+            "serial_number": ["disk-1", "disk-2", "disk-1", "disk-2", "disk-1"],
+            "failure": [0, 0, 0, 0, 1],
+        },
+        index=[10, 20, 30, 40, 50],
+    )
+
+    result = mark_risk_zone(
+        df=df,
+        id_column="serial_number",
+        failure_column="failure",
+        target_column="target",
+        days_before_failure=1,
+    )
+
+    assert result.loc[[10, 20, 40], "target"].tolist() == [0, 0, 0]
+    assert result.loc[[30, 50], "target"].tolist() == [1, 1]
+
+
 def test_split_data_by_serial_has_no_serial_overlap():
     df = pd.DataFrame(
         {

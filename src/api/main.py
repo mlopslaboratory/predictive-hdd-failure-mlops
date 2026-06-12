@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import pickle
 import time
 from collections.abc import AsyncIterator
@@ -23,11 +24,23 @@ MODELS_DIR = BASE_DIR / "models"
 MODEL_PATH = MODELS_DIR / "rf_model.pkl"
 FEATURES_PATH = MODELS_DIR / "features.json"
 PREPROCESSING_PATH = MODELS_DIR / "preprocessing.json"
+PROMETHEUS_URL = os.getenv("PROMETHEUS_URL", "http://localhost:9090")
+GRAFANA_URL = os.getenv("GRAFANA_URL", "http://localhost:3000")
 
 model = None
 feature_cols: list[str] = []
 preprocessing_metadata: dict[str, Any] = {}
 
+HTTP_REQUESTS = Counter(
+    "hdd_http_requests_total",
+    "Total number of HTTP requests.",
+    ["method", "path", "status_code"],
+)
+HTTP_REQUEST_LATENCY = Histogram(
+    "hdd_http_request_duration_seconds",
+    "HTTP request latency in seconds.",
+    ["method", "path"],
+)
 PREDICT_REQUESTS = Counter(
     "hdd_predict_requests_total",
     "Total number of requests to the /predict endpoint.",
@@ -109,23 +122,37 @@ app = FastAPI(
 
 @app.middleware("http")
 async def collect_predict_metrics(request: Request, call_next: Any) -> Response:
-    if request.url.path != "/predict":
-        return await call_next(request)
-
-    PREDICT_REQUESTS.inc()
     start_time = time.perf_counter()
+    path = request.url.path
+    method = request.method
+
+    if path == "/predict":
+        PREDICT_REQUESTS.inc()
 
     try:
         response = await call_next(request)
     except Exception:
-        PREDICTION_ERRORS.inc()
-        INFERENCE_LATENCY.observe(time.perf_counter() - start_time)
+        elapsed = time.perf_counter() - start_time
+        HTTP_REQUESTS.labels(method=method, path=path, status_code="500").inc()
+        HTTP_REQUEST_LATENCY.labels(method=method, path=path).observe(elapsed)
+        if path == "/predict":
+            PREDICTION_ERRORS.inc()
+            INFERENCE_LATENCY.observe(elapsed)
         raise
 
-    if response.status_code >= 400:
+    elapsed = time.perf_counter() - start_time
+    HTTP_REQUESTS.labels(
+        method=method,
+        path=path,
+        status_code=str(response.status_code),
+    ).inc()
+    HTTP_REQUEST_LATENCY.labels(method=method, path=path).observe(elapsed)
+
+    if path == "/predict" and response.status_code >= 400:
         PREDICTION_ERRORS.inc()
 
-    INFERENCE_LATENCY.observe(time.perf_counter() - start_time)
+    if path == "/predict":
+        INFERENCE_LATENCY.observe(elapsed)
     return response
 
 
@@ -265,8 +292,8 @@ def index() -> HTMLResponse:
                     <div class="links">
                         <a href="/docs">Swagger UI</a>
                         <a href="/metrics">Metrics</a>
-                        <a href="http://localhost:9090">Prometheus</a>
-                        <a href="http://localhost:3000">Grafana</a>
+                        <a href="{PROMETHEUS_URL}">Prometheus</a>
+                        <a href="{GRAFANA_URL}">Grafana</a>
                     </div>
                 </div>
                 <div class="card">
