@@ -17,13 +17,13 @@ services:
       # - ./logs:/app/logs
 
   prometheus:
-    image: prom/prometheus:v2.55.1
+    build:
+      context: ./monitoring/prometheus
+    image: predictive-hdd-failure-prometheus:local
     container_name: predictive-hdd-failure-prometheus
     restart: unless-stopped
     ports:
       - "9090:9090"
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     depends_on:
       - app
 

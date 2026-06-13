@@ -102,7 +102,7 @@ def test_openapi_schema_exposes_inference_endpoint():
     assert schema["paths"]["/predict"]["post"]["tags"] == ["inference"]
     assert "/predictions" in schema["paths"]
     assert "/drift-status" in schema["paths"]
-    assert "/retrain" in schema["paths"]
+    assert "/retrain" not in schema["paths"]
 
 
 def test_build_drift_status_summarizes_flags(tmp_path):
@@ -142,11 +142,3 @@ def test_build_drift_status_summarizes_flags(tmp_path):
     assert status.any_drift is True
     assert status.summary["drifted_feature_count"] == 2
 
-
-def test_retrain_returns_manual_command(monkeypatch):
-    monkeypatch.setattr(api_main, "RETRAIN_COMMAND", "dvc repro")
-
-    response = api_main.retrain()
-
-    assert response.status == "manual_action_required"
-    assert response.command == "dvc repro"
