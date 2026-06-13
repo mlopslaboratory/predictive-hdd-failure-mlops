@@ -32,7 +32,6 @@ DRIFT_METRICS_PATH = BASE_DIR / "metrics" / "drift_metrics.json"
 MLFLOW_RUN_INFO_PATH = MODELS_DIR / "mlflow_run.json"
 PROMETHEUS_URL = os.getenv("PROMETHEUS_URL", "http://localhost:9090")
 GRAFANA_URL = os.getenv("GRAFANA_URL", "http://localhost:3000")
-RETRAIN_COMMAND = os.getenv("RETRAIN_COMMAND", "dvc repro")
 PREDICTION_ALERT_THRESHOLD = float(os.getenv("PREDICTION_ALERT_THRESHOLD", "0.5"))
 PREDICTION_HISTORY_LIMIT = int(os.getenv("PREDICTION_HISTORY_LIMIT", "20"))
 
@@ -104,12 +103,6 @@ class DriftStatusResponse(BaseModel):
     concept_drift: bool | None
     any_drift: bool | None
     summary: dict[str, Any]
-
-
-class RetrainResponse(BaseModel):
-    status: str
-    message: str
-    command: str
 
 
 def load_artifacts(
@@ -444,14 +437,8 @@ def index() -> HTMLResponse:
                 font-weight: 750;
                 cursor: pointer;
             }}
-            button.secondary {{
-                background: #344054;
-            }}
             button:hover {{
                 background: var(--accent-dark);
-            }}
-            button.secondary:hover {{
-                background: #1d2939;
             }}
             .actions {{
                 display: flex;
@@ -459,7 +446,7 @@ def index() -> HTMLResponse:
                 gap: 10px;
                 margin-top: 12px;
             }}
-            #result, #retrain-result {{
+            #result {{
                 min-height: 72px;
                 white-space: pre-wrap;
                 font-family: "Cascadia Mono", Consolas, monospace;
@@ -552,15 +539,6 @@ def index() -> HTMLResponse:
                 </div>
 
                 <div class="card">
-                    <h2>Переобучение</h2>
-                    <p>Запрос переобучения фиксирует ручной сценарий запуска пайплайна. Для production лучше запускать отдельный CI/CD workflow, а не обучать модель внутри API-контейнера.</p>
-                    <div class="actions">
-                        <button class="secondary" id="retrain-button" type="button">Запросить переобучение</button>
-                    </div>
-                    <div id="retrain-result">Статус запроса появится здесь.</div>
-                </div>
-
-                <div class="card">
                     <h2>Инференс</h2>
                     <form id="predict-form">
                         <label for="payload"><strong>JSON с признаками</strong></label>
@@ -583,8 +561,6 @@ def index() -> HTMLResponse:
             const payload = document.getElementById("payload");
             const result = document.getElementById("result");
             const history = document.getElementById("history");
-            const retrainButton = document.getElementById("retrain-button");
-            const retrainResult = document.getElementById("retrain-result");
 
             function renderHistory(records) {{
                 if (!records.length) {{
@@ -640,13 +616,6 @@ def index() -> HTMLResponse:
                 }}
             }});
 
-            retrainButton.addEventListener("click", async () => {{
-                retrainResult.textContent = "Формирую запрос...";
-                const response = await fetch("/retrain", {{method: "POST"}});
-                const data = await response.json();
-                retrainResult.textContent = JSON.stringify(data, null, 2);
-            }});
-
             refreshHistory();
         </script>
     </body>
@@ -695,24 +664,6 @@ def recent_predictions() -> list[PredictionRecord]:
 )
 def drift_status() -> DriftStatusResponse:
     return build_drift_status()
-
-
-@app.post(
-    "/retrain",
-    response_model=RetrainResponse,
-    tags=["model"],
-    summary="Request manual retraining",
-)
-def retrain() -> RetrainResponse:
-    return RetrainResponse(
-        status="manual_action_required",
-        message=(
-            "Запрос принят. В этом учебном контуре переобучение запускается "
-            "вручную или через отдельный CI/CD workflow, чтобы API-контейнер "
-            "не выполнял тяжелый training job внутри production процесса."
-        ),
-        command=RETRAIN_COMMAND,
-    )
 
 
 @app.get("/experiments", response_class=HTMLResponse, tags=["model"])

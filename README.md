@@ -236,7 +236,6 @@ http://localhost:8000/
 - таблица последних предсказаний текущего процесса API;
 - флаги `data_drift`, `target_drift`, `concept_drift`;
 - флаг аномалии для предсказания;
-- кнопка запроса переобучения;
 - страница экспериментов `/experiments` с MLflow run info, test metrics и drift summary.
 
 Полезные API endpoints:
@@ -244,7 +243,6 @@ http://localhost:8000/
 ```bash
 curl http://localhost:8000/predictions
 curl http://localhost:8000/drift-status
-curl -X POST http://localhost:8000/retrain
 ```
 
 Docker Compose запуск:

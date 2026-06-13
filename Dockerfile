@@ -22,6 +22,8 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 COPY src/ ./src/
 COPY models/ ./models/
+COPY metrics/ ./metrics/
+COPY reports/ ./reports/
 
 RUN chown -R appuser:appuser /app
 

@@ -30,7 +30,8 @@ project/
 │   ├── rf_model.pkl
 │   └── mlflow_run.json
 ├── monitoring/
-│   ├── prometheus.yml
+│   ├── prometheus/
+│   │   └── prometheus.yml
 │   └── grafana/provisioning/
 ├── notebooks/
 ├── reports/
@@ -60,7 +61,7 @@ project/
 
 ## Ключевые части
 
-- `src/api/main.py` — FastAPI сервис, OpenAPI, web UI, `/predict`, `/predictions`, `/drift-status`, `/retrain`, `/experiments`, `/metrics`.
+- `src/api/main.py` — FastAPI сервис, OpenAPI, web UI, `/predict`, `/predictions`, `/drift-status`, `/experiments`, `/metrics`.
 - `src/data/make_dataset.py` — production data preparation stage для DVC.
 - `src/data/backblaze_dataset_builder.py` — вспомогательный builder для notebook-based подготовки Backblaze данных; не входит в текущий DVC production path.
 - `src/models/train_baseline.py` — обучение baseline `RandomForestClassifier`, сохранение `models/*`, логирование в MLflow.
