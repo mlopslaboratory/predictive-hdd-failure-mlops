@@ -219,8 +219,8 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(
-    title="Predictive HDD Failure API",
-    description="Inference сервис для предсказания отказа диска.",
+    title="Система прогнозирования отказов жестких дисков",
+    description="Вывод сервиса для предсказания отказа диска.",
     version="1.0.0",
     lifespan=lifespan,
     openapi_tags=[
@@ -501,7 +501,7 @@ def index() -> HTMLResponse:
         <main>
             <header>
                 <div>
-                    <h1>Predictive HDD Failure MLOps</h1>
+                    <h1>Система прогнозирования отказов жестких дисков</h1>
                     <p>Инференс, мониторинг дрейфа и эксплуатационные метрики модели отказов дисков.</p>
                 </div>
                 <nav class="top-links" aria-label="Ссылки мониторинга">
