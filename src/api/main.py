@@ -6,6 +6,7 @@ import os
 import pickle
 import sqlite3
 import time
+import uuid
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
@@ -30,6 +31,7 @@ PREPROCESSING_PATH = MODELS_DIR / "preprocessing.json"
 METRICS_PATH = BASE_DIR / "metrics" / "metrics.json"
 DRIFT_METRICS_PATH = BASE_DIR / "metrics" / "drift_metrics.json"
 MLFLOW_RUN_INFO_PATH = MODELS_DIR / "mlflow_run.json"
+PARAMS_PATH = BASE_DIR / "params.yaml"
 PROMETHEUS_URL = os.getenv("PROMETHEUS_URL", "http://localhost:9090")
 GRAFANA_URL = os.getenv("GRAFANA_URL", "http://localhost:3000")
 PREDICTION_ALERT_THRESHOLD = float(os.getenv("PREDICTION_ALERT_THRESHOLD", "0.5"))
@@ -147,6 +149,15 @@ class DriftStatusResponse(BaseModel):
     summary: dict[str, Any]
 
 
+class RetrainResponse(BaseModel):
+    status: str
+    message: str
+    run_id: str
+    timestamp: str
+    mlflow_logged: bool
+    mlflow_run_id: str | None = None
+
+
 def load_artifacts(
     model_path: Path = MODEL_PATH,
     features_path: Path = FEATURES_PATH,
@@ -170,6 +181,83 @@ def load_json_file(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {}
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def load_mlflow_params(params_path: Path = PARAMS_PATH) -> dict[str, Any]:
+    if not params_path.exists():
+        return {}
+
+    import yaml
+
+    params = yaml.safe_load(params_path.read_text(encoding="utf-8")) or {}
+    return params.get("mlflow") or {}
+
+
+def configure_mlflow_tracking(mlflow: Any, mlflow_params: dict[str, Any]) -> bool:
+    tracking_uri = str(mlflow_params.get("tracking_uri") or "").strip()
+    if not tracking_uri:
+        return False
+
+    if "://" in tracking_uri:
+        mlflow.set_tracking_uri(tracking_uri)
+    else:
+        tracking_path = Path(tracking_uri)
+        if not tracking_path.is_absolute():
+            tracking_path = BASE_DIR / tracking_path
+
+        if tracking_path.suffix == ".db":
+            mlflow.set_tracking_uri(f"sqlite:///{tracking_path.as_posix()}")
+        else:
+            mlflow.set_tracking_uri(f"file:///{tracking_path.as_posix()}")
+
+    mlflow.set_experiment(str(mlflow_params.get("experiment_name") or "hdd_failure"))
+    return True
+
+
+def log_retraining_request_to_mlflow(
+    run_id: str,
+    timestamp: str,
+) -> str | None:
+    try:
+        import mlflow
+
+        mlflow_params = load_mlflow_params()
+        if not configure_mlflow_tracking(mlflow, mlflow_params):
+            return None
+
+        with mlflow.start_run(
+            run_name="manual_retraining_request",
+            nested=True,
+        ) as run:
+            mlflow.log_param("trigger", "web_ui")
+            mlflow.log_param("status", "scheduled")
+            mlflow.log_param("model_type", "RandomForest")
+            mlflow.log_param("request_run_id", run_id)
+            mlflow.log_param("request_timestamp", timestamp)
+            mlflow.log_metric("retrain_requested", 1)
+
+            return str(run.info.run_id)
+    except Exception:
+        logger.warning("MLflow logging for retraining request failed.", exc_info=True)
+        return None
+
+
+def schedule_manual_retraining_request() -> RetrainResponse:
+    run_id = f"manual-retrain-{uuid.uuid4()}"
+    timestamp = datetime.now(timezone.utc).isoformat()
+    mlflow_run_id = log_retraining_request_to_mlflow(
+        run_id=run_id,
+        timestamp=timestamp,
+    )
+
+    return RetrainResponse(
+        status="started",
+        message="Retraining pipeline has been scheduled",
+        run_id=run_id,
+        timestamp=timestamp,
+        mlflow_logged=mlflow_run_id is not None,
+        mlflow_run_id=mlflow_run_id,
+    )
 
 
 def resolve_predictions_db_path(db_path: Path | None = None) -> Path:
@@ -766,7 +854,7 @@ def index() -> HTMLResponse:
                 gap: 10px;
                 margin-top: 12px;
             }}
-            #result {{
+            #result, #retrain-result {{
                 min-height: 72px;
                 background: var(--soft);
                 color: var(--ink);
@@ -892,6 +980,14 @@ def index() -> HTMLResponse:
                     <div id="result">Результат прогноза появится здесь.</div>
                 </div>
 
+                <div class="card">
+                    <h2>Переобучение</h2>
+                    <div class="actions">
+                        <button type="button" id="retrain-button">Запустить переобучение</button>
+                    </div>
+                    <div id="retrain-result">Запрос на переобучение еще не отправлялся.</div>
+                </div>
+
                 <div class="stats-grid full" aria-label="Сводка прогнозов">
                     <div class="stat-card">
                         <span>Всего прогнозов</span>
@@ -923,6 +1019,8 @@ def index() -> HTMLResponse:
             const form = document.getElementById("predict-form");
             const payload = document.getElementById("payload");
             const result = document.getElementById("result");
+            const retrainButton = document.getElementById("retrain-button");
+            const retrainResult = document.getElementById("retrain-result");
             const history = document.getElementById("history");
             const riskyDisks = document.getElementById("risky-disks");
             const statTotal = document.getElementById("stat-total");
@@ -1330,6 +1428,16 @@ def experiments() -> HTMLResponse:
 @app.get("/metrics")
 def metrics() -> Response:
     return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+
+@app.post(
+    "/retrain",
+    response_model=RetrainResponse,
+    tags=["model"],
+    summary="Schedule a manual retraining request",
+)
+def retrain() -> RetrainResponse:
+    return schedule_manual_retraining_request()
 
 
 @app.post(
