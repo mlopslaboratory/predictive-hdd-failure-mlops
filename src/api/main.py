@@ -1435,7 +1435,6 @@ def metrics() -> Response:
     response_model=RetrainResponse,
     tags=["model"],
     summary="Schedule a manual retraining request",
-    include_in_schema=False,
 )
 def retrain() -> RetrainResponse:
     return schedule_manual_retraining_request()

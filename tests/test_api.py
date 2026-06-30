@@ -253,7 +253,8 @@ def test_openapi_schema_exposes_inference_endpoint():
     assert "/prediction-stats" in schema["paths"]
     assert "/risky-disks" in schema["paths"]
     assert "/drift-status" in schema["paths"]
-    assert "/retrain" not in schema["paths"]
+    assert "/retrain" in schema["paths"]
+    assert schema["paths"]["/retrain"]["post"]["tags"] == ["model"]
 
 
 def test_openapi_prediction_request_has_executable_example():
@@ -301,4 +302,3 @@ def test_build_drift_status_summarizes_flags(tmp_path):
     assert status.concept_drift is False
     assert status.any_drift is True
     assert status.summary["drifted_feature_count"] == 2
-
