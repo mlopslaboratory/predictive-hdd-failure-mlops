@@ -8,3 +8,6 @@ mlruns/
 src/models/mlruns/
 __pycache__/
 *.py[cod]
+storage/*.db
+storage/*.sqlite
+storage/*.sqlite3
